@@ -110,13 +110,14 @@ MonoBehaviour:
   speed: 2
   health: 30
   touchDamageToPlayer: 10
-  zombieDamageToEnemies: 20
-  zombieLifeTime: 4
+  bloodEffectPrefab: {fileID: 4553287630450876385, guid: 15483e51212e3d74886ea57291f4639a, type: 3}
+  hitSound: {fileID: 8300000, guid: 4019946c726cd4de697f6f605079ed0e, type: 3}
   deathSplatterSound: {fileID: 8300000, guid: aae0b841f77244a6184204455e127f12, type: 3}
   explosiveBushPrefab: {fileID: 3013511278831755744, guid: 7fbe9159e78244024b89395143c6ccc4, type: 3}
   dropChance: 20
   isInfected: 0
-  zombieColor: {r: 0, g: 1, b: 0, a: 1}
+  infectedColor: {r: 0, g: 1, b: 0, a: 1}
+  timeUntilDeath: 3
   searchRange: 20
   interactionTime: 3
   alertColor: {r: 1, g: 0, b: 0, a: 1}
