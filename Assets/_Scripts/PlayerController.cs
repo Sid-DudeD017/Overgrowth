@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.UI; // <--- ADD THIS! REQUIRED FOR UI IMAGES
 using System.Collections;
 
 public class PlayerController : MonoBehaviour
@@ -32,6 +33,11 @@ public class PlayerController : MonoBehaviour
     public float whipRechargeTime = 5.0f; 
     private float nextWhipChargeTimer = 0f;
     private float nextWhipTime = 0f; 
+    [Header("Whip UI")]
+    public Image[] whipIcons; // Drag your 2 Image objects here in Inspector
+    public Color iconActiveColor = Color.green;
+    public Color iconEmptyColor = new Color(0.5f, 0.5f, 0.5f, 0.3f); // Faded Grey
+    // ------------------------
 
     [Header("RPG Stats")]
     public int growthLevel = 1;
@@ -116,6 +122,7 @@ public class PlayerController : MonoBehaviour
     {
         mainCam = Camera.main;
         currentWhipCharges = maxWhipCharges;
+        UpdateWhipUI(); // <--- ADD THIS
     }
 
     void Update()
@@ -123,17 +130,17 @@ public class PlayerController : MonoBehaviour
         if (currentHealth <= 0) return;
 
         // 1. WHIP RECHARGE
-        if (currentWhipCharges < maxWhipCharges)
+       if (currentWhipCharges < maxWhipCharges)
         {
             nextWhipChargeTimer += Time.deltaTime;
             if (nextWhipChargeTimer >= whipRechargeTime)
             {
                 currentWhipCharges++;
                 nextWhipChargeTimer = 0f;
+                UpdateWhipUI(); // <--- UPDATE UI ON RECHARGE
                 Debug.Log($"Whip Recharged! ({currentWhipCharges}/{maxWhipCharges})");
             }
         }
-
         // 2. REGENERATION
         float moveInput = Input.GetAxisRaw("Horizontal") + Input.GetAxisRaw("Vertical");
         if (moveInput != 0) lastMoveTime = Time.time; 
@@ -153,7 +160,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // 4. WHIP
-        if (Input.GetKeyDown(KeyCode.Space))
+       if (Input.GetKeyDown(KeyCode.Space))
         {
             if (Time.time >= nextWhipTime)
             {
@@ -161,15 +168,12 @@ public class PlayerController : MonoBehaviour
                 {
                     VineWhip();
                     currentWhipCharges--; 
+                    UpdateWhipUI(); // <--- UPDATE UI ON USE
                     nextWhipTime = Time.time + 0.5f; 
                 }
-                else
-                {
-                    Debug.Log("Whip Exhausted!");
-                }
+                
             }
         }
-
         // 5. HYDRA LOGIC
         for(int i = 0; i < activeHydraHeads.Count; i++) activeHydraHeads[i].Tick(Time.time);
     }
@@ -387,6 +391,25 @@ public class PlayerController : MonoBehaviour
             headT.localPosition = new Vector3(x, y, 0);
             float inverseScale = 1f / transform.localScale.x; 
             headT.localScale = new Vector3(inverseScale, inverseScale, 1f);
+        }
+    }
+    void UpdateWhipUI()
+    {
+        if (whipIcons == null) return;
+
+        for (int i = 0; i < whipIcons.Length; i++)
+        {
+            if (whipIcons[i] == null) continue;
+
+            // If current charges are greater than this index, it's Active
+            if (i < currentWhipCharges)
+            {
+                whipIcons[i].color = iconActiveColor;
+            }
+            else
+            {
+                whipIcons[i].color = iconEmptyColor;
+            }
         }
     }
 }

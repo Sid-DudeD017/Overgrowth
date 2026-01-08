@@ -97,14 +97,23 @@ public class EnemyBase : MonoBehaviour
     {
         health -= amount;
         
-        // PLAYER INFECTS ENEMY (Starts the Chain at 4)
+        // CHECK FUNGAL INFECTION FROM PLAYER
         if (!isInfected && target != null)
         {
             PlayerController pc = target.GetComponent<PlayerController>();
             if (pc != null && pc.isFungal)
             {
-                // Plant starts the infection with 4 spreads allowed
-                Infect(4); 
+                // --- CHANGE 1: 10% Chance to Infect ---
+                // Random.value gives a float between 0.0 and 1.0
+                if (Random.value <= 0.10f) 
+                {
+                    // --- CHANGE 2: Spread to 2 generations only ---
+                    // Was 4, now 2. (Original -> Gen 1 -> Gen 2 -> Stop)
+                    Infect(2); 
+                    
+                    // Optional: Visual feedback for a successful infection hit
+                    // Debug.Log("Infection Started!"); 
+                }
             }
         }
 
