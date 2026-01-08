@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6786603882666595454}
   - component: {fileID: 7782059899619453482}
   - component: {fileID: 2257223865089918263}
+  - component: {fileID: 6991302441680296743}
   m_Layer: 6
   m_Name: Scientist
   m_TagString: Enemy
@@ -108,9 +109,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScientistEnemy
   speed: 2
   health: 30
+  touchDamageToPlayer: 10
+  zombieDamageToEnemies: 20
+  zombieLifeTime: 4
   deathSplatterSound: {fileID: 8300000, guid: aae0b841f77244a6184204455e127f12, type: 3}
   explosiveBushPrefab: {fileID: 3013511278831755744, guid: 7fbe9159e78244024b89395143c6ccc4, type: 3}
   dropChance: 20
+  isInfected: 0
+  zombieColor: {r: 0, g: 1, b: 0, a: 1}
   searchRange: 20
   interactionTime: 3
   alertColor: {r: 1, g: 0, b: 0, a: 1}
@@ -261,3 +267,30 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!50 &6991302441680296743
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6447968662154096229}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 4

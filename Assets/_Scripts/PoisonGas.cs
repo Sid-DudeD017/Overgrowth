@@ -1,34 +1,35 @@
 using UnityEngine;
 
-public class SteroidGas : MonoBehaviour
+public class PoisonGas : MonoBehaviour
 {
-    public float damagePerSecond = 5.0f; 
+    public float damagePerSecond = 10.0f; // High damage
     public float moveSpeed = 4.0f; 
-    public float lifetime = 2.0f; // Disappears automatically after this time
+    public float lifetime = 2.0f; 
 
     void Start()
     {
-        // Destroy gas after 2 seconds (so it disappears "just ahead" or after missing)
+        // Destroy gas after a few seconds
         Destroy(gameObject, lifetime);
     }
 
     void Update()
     {
-        // Float forward
+        // Float forward (Spray effect)
         transform.Translate(Vector3.right * moveSpeed * Time.deltaTime);
     }
 
-   void OnTriggerStay2D(Collider2D other)
+    void OnTriggerStay2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
         {
             PlayerController player = other.GetComponent<PlayerController>();
             if (player != null)
             {
+                // Simple Damage - No Buffs
                 player.TakeDamage(damagePerSecond * Time.deltaTime);
                 
-                // THIS LINE IS CRITICAL:
-                player.RefreshSteroidDuration(0.2f); 
+                // Optional: Flash player red?
+                // player.GetComponent<SpriteRenderer>().color = Color.red;
             }
         }
     }

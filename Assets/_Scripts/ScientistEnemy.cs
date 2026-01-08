@@ -12,7 +12,7 @@ public class ScientistEnemy : EnemyBase
     private bool isGassing = false;
     private float nextSearchTime = 0f;
 
-    // NEW: We track the specific cloud we created
+    // Track the most recent gas bubble/cloud for cleanup
     private GameObject activeGasCloud; 
 
     [Header("Gas System")]
@@ -25,18 +25,38 @@ public class ScientistEnemy : EnemyBase
 
     protected override void Update()
     {
+        // 1. ZOMBIE CHECK (Passive Mode)
+        // If infected, we simply stop doing ANYTHING. 
+        // We rely on EnemyBase to handle the dying timer and spreading.
+        if (isInfected)
+        {
+            return;        
+        }
+
         if (isGassing) return;
 
+        // 2. VALVE LOGIC
         if (currentTargetValve == null)
         {
+            // If I don't have a job, look for one...
             if (Time.time >= nextSearchTime)
             {
                 FindClosestValve();
                 nextSearchTime = Time.time + 1.0f; 
             }
+            
+            // --- COWARD BEHAVIOR (Only if HEALTHY) ---
+            // If I am healthy but have no job, run away from the player.
+            if (currentTargetValve == null && target != null)
+            {
+                 Vector2 fleeDir = transform.position - target.position;
+                 transform.position += (Vector3)fleeDir.normalized * speed * Time.deltaTime;
+            }
+            // ---------------------------------------
             return;
         }
 
+        // 3. MOVE TO VALVE (If we have one)
         MoveToValve();
     }
 
@@ -97,7 +117,7 @@ public class ScientistEnemy : EnemyBase
 
         float delayBetweenBubbles = 0.2f; // Adjust firing speed here
 
-        // FIX: Infinite Loop (runs until Scientist dies)
+        // Infinite Loop (runs until Scientist dies or gets infected)
         while (true)
         {
             // 1. Aim at Player
@@ -116,13 +136,16 @@ public class ScientistEnemy : EnemyBase
             {
                 // Add randomness for "Spray" effect
                 Quaternion randomSpray = sprayRotation * Quaternion.Euler(0, 0, Random.Range(-15f, 15f));
-                Instantiate(gasCloudPrefab, currentTargetValve.transform.position, randomSpray);
+                
+                // Track this specific cloud so we can delete it if we get infected immediately
+                activeGasCloud = Instantiate(gasCloudPrefab, currentTargetValve.transform.position, randomSpray);
             }
 
             // 3. Wait before next shot
             yield return new WaitForSeconds(delayBetweenBubbles);
         }
     }
+
     // --- FIX: CLEAN UP GAS ON DEATH ---
     void OnDestroy()
     {
@@ -133,10 +156,38 @@ public class ScientistEnemy : EnemyBase
             if (valveSR != null) valveSR.color = Color.white;
         }
 
-        // 2. Destroy the Gas Cloud (The Fix)
+        // 2. Destroy the Gas Cloud
         if (activeGasCloud != null)
         {
             Destroy(activeGasCloud);
         }
+    }
+
+    // --- NEW: STOP WORKING WHEN INFECTED ---
+    protected override void OnInfected()
+    {
+        // 1. Stop the gas timer immediately (Stops the While Loop)
+        StopAllCoroutines(); 
+
+        // 2. Reset the Valve Visuals (if we were turning one)
+        if (currentTargetValve != null)
+        {
+            SpriteRenderer valveSR = currentTargetValve.GetComponent<SpriteRenderer>();
+            if (valveSR != null) valveSR.color = Color.white; // Reset to normal
+        }
+
+        // 3. Destroy any gas we just created (The one currently in the air)
+        if (activeGasCloud != null)
+        {
+            Destroy(activeGasCloud);
+        }
+
+        // 4. Reset Logic Flags
+        isGassing = false;
+        currentTargetValve = null;
+        
+        // Note: We do NOT need to handle death/spreading here. 
+        // EnemyBase handles the spread limit (4 people) and the death timer automatically.
+        Debug.Log("Scientist infected! Abandoning valve.");
     }
 }

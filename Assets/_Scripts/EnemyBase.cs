@@ -1,75 +1,169 @@
 using UnityEngine;
+using System.Collections;
 
 public class EnemyBase : MonoBehaviour
 {
+    [Header("Stats")]
     public float speed = 2f;
     public float health = 30f;
-    protected Transform target; // The Player
+    public float touchDamageToPlayer = 10f; 
+    
+    protected Transform target; 
 
+    // --- FIXED: ADDED MISSING AUDIO CLIP VARIABLE ---
     [Header("Audio")]
-    public AudioClip deathSplatterSound;
+    public AudioClip deathSplatterSound; 
+    // ------------------------------------------------
 
     [Header("Volatile Garden")]
-    public GameObject explosiveBushPrefab; // DRAG YOUR BUSH PREFAB HERE
-    public float dropChance = 20f; // 20% Chance to drop a mine
+    public GameObject explosiveBushPrefab; 
+    public float dropChance = 20f; 
+
+    [Header("Fungal Disease")]
+    public bool isInfected = false;
+    public Color infectedColor = Color.green;
+    public float timeUntilDeath = 3.0f; // Dies in a few seconds
 
     protected virtual void Start()
     {
-        // Find player once at start to save performance
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         if (p != null) target = p.transform;
     }
 
     protected virtual void Update()
     {
-        // Default behavior: Walk to player
+        // 1. IF INFECTED: DO NOTHING (Stand still and wait to die)
+        if (isInfected)
+        {
+            return; 
+        }
+
+        // 2. IF NORMAL: CHASE PLAYER
         if(target != null)
         {
             transform.position = Vector2.MoveTowards(transform.position, target.position, speed * Time.deltaTime);
         }
     }
 
+    // --- INFECTION LOGIC (Limited to 4 jumps) ---
+    public void Infect(int spreadLimit)
+    {
+        if (isInfected) return; // Already sick
+        
+        isInfected = true;
+        
+        // 1. Change Color
+        GetComponent<SpriteRenderer>().color = infectedColor;
+
+        // 2. Trigger Scientist Hook (Stop working)
+        OnInfected();
+
+        // 3. Start Spreading (Only if we have spreads left)
+        if (spreadLimit > 0)
+        {
+            StartCoroutine(SpreadRoutine(spreadLimit));
+        }
+
+        // 4. Die after time
+        StartCoroutine(DeathTimer());
+    }
+
+    IEnumerator SpreadRoutine(int remainingSpreads)
+    {
+        // Try to spread every 0.5 seconds until death
+        while (true)
+        {
+            yield return new WaitForSeconds(0.5f);
+            
+            // Look for neighbors to infect
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 3.0f);
+            foreach (var hit in hits)
+            {
+                if (hit.CompareTag("Enemy"))
+                {
+                    EnemyBase neighbor = hit.GetComponent<EnemyBase>();
+                    
+                    // Infect neighbor with ONE LESS spread count
+                    if (neighbor != null && !neighbor.isInfected)
+                    {
+                        neighbor.Infect(remainingSpreads - 1);
+                    }
+                }
+            }
+        }
+    }
+
     public void TakeDamage(float amount)
     {
         health -= amount;
+        
+        // PLAYER INFECTS ENEMY (Starts the Chain at 4)
+        if (!isInfected && target != null)
+        {
+            PlayerController pc = target.GetComponent<PlayerController>();
+            if (pc != null && pc.isFungal)
+            {
+                // Plant starts the infection with 4 spreads allowed
+                Infect(4); 
+            }
+        }
+
         if(health <= 0) Die();
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        // INFECTED ENEMIES ARE HARMLESS
+        if (isInfected) return;
+
+        // Normal enemies hurt the player
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            PlayerController player = collision.gameObject.GetComponent<PlayerController>();
+            if (player != null) player.TakeDamage(touchDamageToPlayer);
+        }
+    }
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        // Same logic for Triggers
+        if (isInfected) return;
+
+        if (other.CompareTag("Player"))
+        {
+            PlayerController player = other.GetComponent<PlayerController>();
+            if (player != null) player.TakeDamage(touchDamageToPlayer);
+        }
+    }
+
+    protected virtual void OnInfected() { }
+
+    IEnumerator DeathTimer()
+    {
+        yield return new WaitForSeconds(timeUntilDeath);
+        Die();
     }
 
     public void Die()
     {
-        // --- 1. VOLATILE GARDEN LOGIC ---
-        // Roll the dice (0 to 100). If less than 20, drop a bush.
         if (Random.Range(0f, 100f) < dropChance)
         {
-            if (explosiveBushPrefab != null)
-            {
-                Instantiate(explosiveBushPrefab, transform.position, Quaternion.identity);
-            }
+            if (explosiveBushPrefab != null) Instantiate(explosiveBushPrefab, transform.position, Quaternion.identity);
         }
 
-        // --- 2. BIOMASS ABSORPTION LOGIC ---
         if (target != null)
         {
             PlayerController pScript = target.GetComponent<PlayerController>();
-            
-            // Check if we are close enough to be "eaten"
             if (pScript != null)
             {
-                float distance = Vector2.Distance(transform.position, target.position);
-                if (distance <= pScript.absorptionRadius)
-                {
-                    pScript.AddBiomass(10f);
-                }
+                float d = Vector2.Distance(transform.position, target.position);
+                if (d <= pScript.absorptionRadius) pScript.AddBiomass(10f);
             }
         }
-
-        // --- 3. AUDIO LOGIC ---
-        if(deathSplatterSound)
-        {
-            AudioSource.PlayClipAtPoint(deathSplatterSound, transform.position);
-        }
-
-        // --- 4. CLEANUP ---
+        
+        // Play Sound
+        if(deathSplatterSound) AudioSource.PlayClipAtPoint(deathSplatterSound, transform.position);
+        
         Destroy(gameObject);
     }
 }

@@ -10,10 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 7648280330000262203}
   - component: {fileID: 8725393841219775236}
-  - component: {fileID: 7211845455654341566}
   - component: {fileID: 1155276920347121202}
+  - component: {fileID: 2960484940497298392}
   m_Layer: 0
-  m_Name: SteroidGas
+  m_Name: PoisonGas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -93,21 +93,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &7211845455654341566
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7881312270146141856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a54bfab0281fe4b31954da11445ff195, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SteroidGas
-  damagePerSecond: 5
-  moveSpeed: 4
-  lifetime: 2
 --- !u!58 &1155276920347121202
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -144,3 +129,18 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
+--- !u!114 &2960484940497298392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7881312270146141856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e73c44a9b651d4106acfc33c22674556, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PoisonGas
+  damagePerSecond: 10
+  moveSpeed: 4
+  lifetime: 2
