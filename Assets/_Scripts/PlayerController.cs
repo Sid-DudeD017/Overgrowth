@@ -69,9 +69,9 @@ public class PlayerController : MonoBehaviour
 
     [Header("Mutation: Vampiric")]
     public bool isVampiric = false;
-    public float healOnKillAmount = 2f; 
-    private float nextVampireHealTime = 0f; 
-
+    // CHANGE: Start at 0. (Upgrade 1 adds 2 = 2 Total). (Upgrade 2 adds 2 = 4 Total).
+    public float healOnKillAmount = 0f; 
+    private float nextVampireHealTime = 0f;
     [Header("XP System")]
     public float currentXP = 0f;
     public float xpToNextLevel = 30f; 
@@ -105,6 +105,8 @@ public class PlayerController : MonoBehaviour
     public AudioClip shootSound;
     public AudioClip whipSound;
     public AudioClip growthSound; 
+    public Animator animator; 
+    public GameObject whipVFXPrefab; 
 
     private Camera mainCam;
     private List<UpgradeOption> currentRoundOptions = new List<UpgradeOption>();
@@ -181,18 +183,27 @@ public class PlayerController : MonoBehaviour
     public void Shoot(Transform origin, float dmg, float homing)
     {
         if (currentHealth <= healthCostPerShot + 1) return; 
+
+        if(animator != null) animator.SetTrigger("Shoot");
+
         TakeDamage(healthCostPerShot); 
         nextFireTime = Time.time + fireRate;
 
         if (isMultiShot) 
         {
-            CreateBullet(shootPoint.position, transform.rotation, dmg, homing);
-            if (shootPointLeft) CreateBullet(shootPointLeft.position, transform.rotation, dmg, homing);
-            if (shootPointRight) CreateBullet(shootPointRight.position, transform.rotation, dmg, homing);
+            // FIX: Using shootPoint.rotation allows you to rotate the point in the Editor
+            CreateBullet(shootPoint.position, shootPoint.rotation, dmg, homing);
+            
+            if (shootPointLeft) 
+                CreateBullet(shootPointLeft.position, shootPointLeft.rotation, dmg, homing);
+            
+            if (shootPointRight) 
+                CreateBullet(shootPointRight.position, shootPointRight.rotation, dmg, homing);
         }
         else
         {
-            CreateBullet(shootPoint.position, transform.rotation, dmg, homing);
+            // FIX: Using shootPoint.rotation
+            CreateBullet(shootPoint.position, shootPoint.rotation, dmg, homing);
         }
 
         if(playerAudio && shootSound) 
@@ -205,7 +216,21 @@ public class PlayerController : MonoBehaviour
     void VineWhip()
     {
         if(playerAudio && whipSound) playerAudio.PlayOneShot(whipSound);
-        
+
+
+        // Spawn the green vines visual at player's position
+       if (whipVFXPrefab != null)
+        {
+            // 1. Create the object
+            GameObject vfx = Instantiate(whipVFXPrefab, transform.position, Quaternion.identity);
+            
+            // 2. Scale it up based on Domain Expansion Level
+            // If domainCount is 0, scale is 1.0 (Normal)
+            // If domainCount is 1, scale is 1.5 (Big)
+            // If domainCount is 2, scale is 2.25 (Huge)
+            float scaleMultiplier = Mathf.Pow(1.5f, domainCount); 
+            vfx.transform.localScale = new Vector3(scaleMultiplier, scaleMultiplier, 1f);
+        }
         Collider2D[] enemiesHit = Physics2D.OverlapCircleAll(transform.position, whipRange);
         foreach (Collider2D col in enemiesHit)
         {
@@ -231,7 +256,10 @@ public class PlayerController : MonoBehaviour
         Vector3 mousePos = mainCam.ScreenToWorldPoint(Input.mousePosition);
         Vector2 direction = mousePos - transform.position;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.Euler(0, 0, angle - 90); 
+        
+        // --- FIX IS HERE ---
+        // Changed from "- 90" to "+ 90" to flip it 180 degrees.
+        transform.rotation = Quaternion.Euler(0, 0, angle + 90); 
     }
 
     public void HealFromDigestion()
@@ -328,6 +356,11 @@ public class PlayerController : MonoBehaviour
     void ApplyUpgrade(UpgradeType type)
     {
         growthLevel++;
+
+        // --- NEW: TRIGGER GROW ANIMATION ---
+        if(animator != null) animator.SetTrigger("Grow");
+        // -----------------------------------
+
         currentHealth = maxHealth; 
         AudioManager.instance.PlayGrowth();
 
@@ -339,7 +372,8 @@ public class PlayerController : MonoBehaviour
                 break;
             case UpgradeType.Vampiric:
                 isVampiric = true;
-                healOnKillAmount += 2f; 
+                // THIS LINE ADDS THE STACKING EFFECT
+                healOnKillAmount += 2f; // Adds +2 HP per Upgrade
                 absorptionRadius *= 1.2f; 
                 break;
             case UpgradeType.Titan:

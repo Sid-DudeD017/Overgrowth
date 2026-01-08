@@ -9,6 +9,9 @@ public class EnemyBase : MonoBehaviour
     public float touchDamageToPlayer = 10f; 
     
     protected Transform target; 
+    [Header("Blood VFX & SFX")]
+    public GameObject bloodEffectPrefab; // Drag your Blood Particle Prefab here
+    public AudioClip hitSound;           // Drag a "Squish" or "Hit" sound here
 
     // --- FIXED: ADDED MISSING AUDIO CLIP VARIABLE ---
     [Header("Audio")]
@@ -96,30 +99,37 @@ public class EnemyBase : MonoBehaviour
     public void TakeDamage(float amount)
     {
         health -= amount;
+
+        // --- 1. BLOOD VISUALS ---
+        if (bloodEffectPrefab != null)
+        {
+            // Instantiate blood at the enemy's position
+            Instantiate(bloodEffectPrefab, transform.position, Quaternion.identity);
+        }
+
+        // --- 2. HIT AUDIO ---
+        if (hitSound != null)
+        {
+            // PlayClipAtPoint creates a temporary audio source that dies after playing
+            AudioSource.PlayClipAtPoint(hitSound, transform.position);
+        }
         
-        // CHECK FUNGAL INFECTION FROM PLAYER
+        // --- 3. INFECTION LOGIC (Keep existing) ---
         if (!isInfected && target != null)
         {
             PlayerController pc = target.GetComponent<PlayerController>();
             if (pc != null && pc.isFungal)
             {
-                // --- CHANGE 1: 10% Chance to Infect ---
-                // Random.value gives a float between 0.0 and 1.0
                 if (Random.value <= 0.10f) 
                 {
-                    // --- CHANGE 2: Spread to 2 generations only ---
-                    // Was 4, now 2. (Original -> Gen 1 -> Gen 2 -> Stop)
-                    Infect(2); 
-                    
-                    // Optional: Visual feedback for a successful infection hit
-                    // Debug.Log("Infection Started!"); 
+                    // Spread to 3 neighbors
+                    Infect(3); 
                 }
             }
         }
 
         if(health <= 0) Die();
     }
-
     private void OnCollisionStay2D(Collision2D collision)
     {
         // INFECTED ENEMIES ARE HARMLESS
