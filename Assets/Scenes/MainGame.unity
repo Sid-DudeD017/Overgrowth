@@ -202,9 +202,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1881487060}
-        m_TargetAssemblyTypeName: PauseManager, Assembly-CSharp
-        m_MethodName: QuitGame
+      - m_Target: {fileID: 1881487055}
+        m_TargetAssemblyTypeName: GameUIManager, Assembly-CSharp
+        m_MethodName: QuitToMainMenu
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -649,7 +649,7 @@ MonoBehaviour:
   iconActiveColor: {r: 0, g: 1, b: 0, a: 1}
   iconEmptyColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.3}
   growthLevel: 1
-  maxGrowthLevel: 2
+  maxGrowthLevel: 1
   absorptionRadius: 4
   bulletDamage: 10
   fireRate: 0.05
@@ -3300,9 +3300,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1881487060}
-        m_TargetAssemblyTypeName: PauseManager, Assembly-CSharp
-        m_MethodName: QuitGame
+      - m_Target: {fileID: 1881487055}
+        m_TargetAssemblyTypeName: GameUIManager, Assembly-CSharp
+        m_MethodName: QuitToMainMenu
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

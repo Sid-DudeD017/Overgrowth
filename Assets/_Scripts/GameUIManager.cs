@@ -153,4 +153,14 @@ public class GameUIManager : MonoBehaviour
         ResumeGame(); // IMPORTANT: Unfreeze before reloading or the next scene starts frozen!
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+    public void QuitToMainMenu()
+    {
+        // 1. CRITICAL: Unpause audio and time before leaving
+        Time.timeScale = 1f;
+        AudioListener.pause = false; 
+
+        // 2. Load your menu scene
+        // Make sure "MainMenu" matches the exact name of your scene file!
+        SceneManager.LoadScene("MainMenu"); 
+    }
 }
