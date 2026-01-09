@@ -312,7 +312,11 @@ public class PlayerController : MonoBehaviour
 
     void PrepareLevelUp()
     {
-        if (growthLevel >= maxGrowthLevel) return;
+        if (growthLevel >= maxGrowthLevel) 
+        {
+            if(uiManager) uiManager.ShowWinScreen();
+            return;
+        }
 
         List<UpgradeOption> validUpgrades = new List<UpgradeOption>();
         foreach(var upgrade in allUpgrades)
@@ -399,31 +403,33 @@ public class PlayerController : MonoBehaviour
         ResizeAndRepositionHydras();
     }
 
-    void ResizeAndRepositionHydras()
+   void ResizeAndRepositionHydras()
     {
         if (activeHydraHeads.Count == 0) return;
 
         float angleStep = 360f / activeHydraHeads.Count; 
-        
+        float currentScale = transform.localScale.x; 
+
         for (int i = 0; i < activeHydraHeads.Count; i++)
         {
             Transform headT = activeHydraHeads[i].transform;
             float angle = i * angleStep;
             
-            // 1. POSITION (Sticks to Body)
-            // Scales gap automatically with Titan size
-            float x = Mathf.Cos(angle * Mathf.Deg2Rad) * hydraBaseDistance;
-            float y = Mathf.Sin(angle * Mathf.Deg2Rad) * hydraBaseDistance;
+            // --- FIX 1: REVERT POSITION LOGIC ---
+            // We use 'hydraBaseDistance' directly as the Local Offset.
+            // As the Parent scales up, this Local Offset scales with it naturally.
+            float distance = hydraBaseDistance; 
             
+            float x = Mathf.Cos(angle * Mathf.Deg2Rad) * distance;
+            float y = Mathf.Sin(angle * Mathf.Deg2Rad) * distance;
             headT.localPosition = new Vector3(x, y, 0);
 
-            // 2. ROTATION (Adjustable)
+            // --- FIX 2: ROTATION ---
             headT.localRotation = Quaternion.Euler(0, 0, angle + hydraRotationOffset);
 
-            // 3. SCALE (Consistent Size)
-            float currentScale = transform.localScale.x;
+            // --- FIX 3: KEEP HEAD SIZE NORMAL ---
+            // This prevents the heads from becoming giant pixels when you grow
             float finalSize = (1f / currentScale) * hydraHeadScale; 
-            
             headT.localScale = new Vector3(finalSize, finalSize, 1f);
         }
     }
