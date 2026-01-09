@@ -8,26 +8,29 @@ public class GameUIManager : MonoBehaviour
 {
     [Header("HUD")]
     public Slider healthSlider;
-    public Slider xpSlider; // THIS is the new slot you were missing
+    public Slider xpSlider; 
     public TextMeshProUGUI levelText;
     public GameObject gameOverPanel;
 
     [Header("Upgrade Menu")]
-    public GameObject upgradePanel; // THIS is the new slot
-    public Button[] choiceButtons; // Assign your 3 buttons here
-    public TextMeshProUGUI[] buttonTexts; // Assign the text inside those buttons
+    public GameObject upgradePanel; 
+    public Button[] choiceButtons; 
+    public TextMeshProUGUI[] buttonTexts; 
 
     [Header("Visual Feedback")]
     public Color normalColor = Color.green;
     public Color dangerColor = Color.red;
     public Image healthFillImage;
+    
     [Header("Win Screen References")]
     public GameObject winPanel;
     public TextMeshProUGUI winTitle;
     public TextMeshProUGUI winDescription;
     public Image winBackgroundPanel;
-
-
+    
+    [Header("Card System")]
+    public GameObject cardPrefab;      
+    public Transform cardContainer;
 
     void Start()
     {
@@ -40,33 +43,47 @@ public class GameUIManager : MonoBehaviour
         if (xpSlider) xpSlider.value = current / max;
     }
 
-        public void ShowLevelUpOptions(List<string> options, System.Action<int> onChoose)
+    // --- UPDATED FUNCTION: REMOVED TEXT LOGIC, KEPT IMAGE LOGIC ---
+   public void ShowUpgradeCards(List<PlayerController.UpgradeOption> options, System.Action<int> onCardSelected)
     {
-        // (Keep your existing code here)
-        if (upgradePanel)
+        // --- FIX 1: STOP TIME ---
+        Time.timeScale = 0f; 
+        // ------------------------
+
+        foreach (Transform child in cardContainer) Destroy(child.gameObject);
+
+        if (upgradePanel) upgradePanel.SetActive(true);
+        else gameObject.SetActive(true); 
+
+        for (int i = 0; i < options.Count; i++)
         {
-            upgradePanel.SetActive(true);
-            Time.timeScale = 0f;
-
-            for (int i = 0; i < choiceButtons.Length; i++)
+            int index = i; 
+            GameObject card = Instantiate(cardPrefab, cardContainer);
+            
+            Transform iconTransform = card.transform.Find("CardIcon");
+            if (iconTransform)
             {
-                if (i < options.Count)
-                {
-                    choiceButtons[i].gameObject.SetActive(true);
-                    buttonTexts[i].text = options[i];
+                Image iconImg = iconTransform.GetComponent<Image>();
+                if(iconImg) iconImg.sprite = options[i].cardSprite;
+            }
 
-                    int index = i;
-                    choiceButtons[i].onClick.RemoveAllListeners();
-                    choiceButtons[i].onClick.AddListener(() =>
-                    {
-                        onChoose(index);
-                        CloseUpgradeMenu();
-                    });
-                }
-                else choiceButtons[i].gameObject.SetActive(false);
+            Button btn = card.GetComponent<Button>();
+            if (btn)
+            {
+                btn.onClick.AddListener(() => 
+                {
+                    // --- FIX 2: RESUME TIME ---
+                    Time.timeScale = 1f; 
+                    // --------------------------
+                    
+                    onCardSelected(index);
+                    if (upgradePanel) upgradePanel.SetActive(false);
+                    else gameObject.SetActive(false);
+                });
             }
         }
     }
+    // -------------------------------------------------------------
 
     void CloseUpgradeMenu()
     {
@@ -80,7 +97,6 @@ public class GameUIManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    // --- NEW WIN FUNCTION ---
     public void ShowWinScreen()
     {
         if (winPanel != null) 
@@ -88,16 +104,12 @@ public class GameUIManager : MonoBehaviour
             winPanel.SetActive(true);
             
             // THEME: "NOTHING IS WHAT IT SEEMS"
-            // Change the visual style to look like a disaster report
-            
-            // 1. Scary Title
             if(winTitle) 
             {
                 winTitle.text = "CONTAINMENT FAILED";
                 winTitle.color = Color.red;
             }
 
-            // 2. Lore Description (The Twist)
             if(winDescription)
             {
                 winDescription.text = "Subject has escaped the facility.\n" +
@@ -106,14 +118,12 @@ public class GameUIManager : MonoBehaviour
                                       "THE MONSTER WINS.";
             }
 
-            // 3. Dark Red Background
             if(winBackgroundPanel)
             {
-                winBackgroundPanel.color = new Color(0.3f, 0f, 0f, 1f); // Blood Red
+                winBackgroundPanel.color = new Color(0.3f, 0f, 0f, 1f); 
             }
         }
 
-        // Stop the game time
         Time.timeScale = 0f;
     }
 

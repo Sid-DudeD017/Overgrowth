@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.UI; // <--- ADD THIS! REQUIRED FOR UI IMAGES
+using UnityEngine.UI; // REQUIRED FOR UI IMAGES
 using System.Collections;
 
 public class PlayerController : MonoBehaviour
@@ -15,6 +15,7 @@ public class PlayerController : MonoBehaviour
         public string title;
         public string description;
         public UpgradeType type;
+        public Sprite cardSprite; // <--- NEW: Drag your Card Image here in Inspector!
     }
 
     [Header("Stats")]
@@ -33,11 +34,11 @@ public class PlayerController : MonoBehaviour
     public float whipRechargeTime = 5.0f; 
     private float nextWhipChargeTimer = 0f;
     private float nextWhipTime = 0f; 
+    
     [Header("Whip UI")]
-    public Image[] whipIcons; // Drag your 2 Image objects here in Inspector
+    public Image[] whipIcons; 
     public Color iconActiveColor = Color.green;
-    public Color iconEmptyColor = new Color(0.5f, 0.5f, 0.5f, 0.3f); // Faded Grey
-    // ------------------------
+    public Color iconEmptyColor = new Color(0.5f, 0.5f, 0.5f, 0.3f); 
 
     [Header("RPG Stats")]
     public int growthLevel = 1;
@@ -65,22 +66,22 @@ public class PlayerController : MonoBehaviour
     public float chompRange = 2.0f;       
     public float digestionTime = 3.0f;    
     public float healFromDigestion = 15f; 
-    // --- ADD THESE TO CONTROL THE GAP AND SIZE ---
+    // --- HYDRA CONTROLS ---
     public float hydraBaseDistance = 0.5f; // Smaller number = Closer to body
     public float hydraHeadScale = 1.0f;    // Bigger number = Bigger heads
-    public float hydraRotationOffset = -90f;
-    // ---------------------------------------------
+    public float hydraRotationOffset = -90f; // Adjust to face heads outward
+    // ----------------------
     private List<HydraTurret> activeHydraHeads = new List<HydraTurret>();
 
     [Header("Mutation: Vampiric")]
     public bool isVampiric = false;
-    // CHANGE: Start at 0. (Upgrade 1 adds 2 = 2 Total). (Upgrade 2 adds 2 = 4 Total).
     public float healOnKillAmount = 0f; 
     private float nextVampireHealTime = 0f;
+
     [Header("XP System")]
     public float currentXP = 0f;
     public float xpToNextLevel = 30f; 
-    // --- FIXED: ADDED MISSING WHIP VARIABLES HERE ---
+    
     [Header("Whip Stats")]
     public float whipRange = 3.5f;
     public float whipDamage = 50f;
@@ -91,15 +92,13 @@ public class PlayerController : MonoBehaviour
 
     [Header("Upgrade Counts (Strict Limits)")]
     public int hydraCount = 0;
-    public int maxHydraCount = 4; // Max 4 Chompers
+    public int maxHydraCount = 4; 
     
     public int domainCount = 0;
-    public int maxDomainCount = 2; // Max 2 Domain Expansions
+    public int maxDomainCount = 2; 
 
-    // --- NEW: TITAN LIMIT ---
     public int titanCount = 0;
-    public int maxTitanCount = 2; // Max 2 Titans
-    // ------------------------
+    public int maxTitanCount = 2; 
 
     [Header("References")]
     public GameUIManager uiManager; 
@@ -115,21 +114,17 @@ public class PlayerController : MonoBehaviour
 
     private Camera mainCam;
     private List<UpgradeOption> currentRoundOptions = new List<UpgradeOption>();
-    private List<UpgradeOption> allUpgrades = new List<UpgradeOption>()
-    {
-        new UpgradeOption { title = "CHOMPER", description = "+1 Chomping Head", type = UpgradeType.Hydra },
-        new UpgradeOption { title = "VAMPIRE", description = "Heal +2HP on Kill", type = UpgradeType.Vampiric },
-        new UpgradeOption { title = "TITAN", description = "Size +50%\nMax HP x2\n+2 Max Hydras", type = UpgradeType.Titan },
-        new UpgradeOption { title = "DOMAIN", description = "Whip Rng +50%\nAbsorb +50%", type = UpgradeType.Domain },
-        new UpgradeOption { title = "FUNGAL", description = "Infect enemies.\nThey spread virus & die.", type = UpgradeType.Fungal },
-        new UpgradeOption { title = "TRIPLE SHOT", description = "Fire 3 bullets parallel.\nHigh accuracy.", type = UpgradeType.MultiShot }
-    };
+
+    // --- NEW: PUBLIC LIST FOR INSPECTOR SETUP ---
+    [Header("Upgrade Configuration")]
+    public List<UpgradeOption> allUpgrades; 
+    // --------------------------------------------
 
     void Start()
     {
         mainCam = Camera.main;
         currentWhipCharges = maxWhipCharges;
-        UpdateWhipUI(); // <--- ADD THIS
+        UpdateWhipUI(); 
     }
 
     void Update()
@@ -144,10 +139,10 @@ public class PlayerController : MonoBehaviour
             {
                 currentWhipCharges++;
                 nextWhipChargeTimer = 0f;
-                UpdateWhipUI(); // <--- UPDATE UI ON RECHARGE
-                Debug.Log($"Whip Recharged! ({currentWhipCharges}/{maxWhipCharges})");
+                UpdateWhipUI(); 
             }
         }
+
         // 2. REGENERATION
         float moveInput = Input.GetAxisRaw("Horizontal") + Input.GetAxisRaw("Vertical");
         if (moveInput != 0) lastMoveTime = Time.time; 
@@ -161,7 +156,7 @@ public class PlayerController : MonoBehaviour
         RotateTowardsMouse();
 
         // 3. SHOOTING
-        if (Input.GetMouseButtonDown(0) && Time.time >= nextFireTime)
+        if (Input.GetKeyDown(KeyCode.A) && Time.time >= nextFireTime)
         {
             Shoot(shootPoint, bulletDamage, bulletHoming);
         }
@@ -175,12 +170,12 @@ public class PlayerController : MonoBehaviour
                 {
                     VineWhip();
                     currentWhipCharges--; 
-                    UpdateWhipUI(); // <--- UPDATE UI ON USE
+                    UpdateWhipUI(); 
                     nextWhipTime = Time.time + 0.5f; 
                 }
-                
             }
         }
+
         // 5. HYDRA LOGIC
         for(int i = 0; i < activeHydraHeads.Count; i++) activeHydraHeads[i].Tick(Time.time);
     }
@@ -196,7 +191,7 @@ public class PlayerController : MonoBehaviour
 
         if (isMultiShot) 
         {
-            // FIX: Using shootPoint.rotation allows you to rotate the point in the Editor
+            // Use shootPoint.rotation
             CreateBullet(shootPoint.position, shootPoint.rotation, dmg, homing);
             
             if (shootPointLeft) 
@@ -207,7 +202,6 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            // FIX: Using shootPoint.rotation
             CreateBullet(shootPoint.position, shootPoint.rotation, dmg, homing);
         }
 
@@ -221,21 +215,18 @@ public class PlayerController : MonoBehaviour
     void VineWhip()
     {
         if(playerAudio && whipSound) playerAudio.PlayOneShot(whipSound);
+        if(animator != null) animator.SetTrigger("Whip");
 
-
-        // Spawn the green vines visual at player's position
+        // Spawn VFX fixed (No rotation)
        if (whipVFXPrefab != null)
         {
-            // 1. Create the object
             GameObject vfx = Instantiate(whipVFXPrefab, transform.position, Quaternion.identity);
             
-            // 2. Scale it up based on Domain Expansion Level
-            // If domainCount is 0, scale is 1.0 (Normal)
-            // If domainCount is 1, scale is 1.5 (Big)
-            // If domainCount is 2, scale is 2.25 (Huge)
+            // Scale based on Domain Expansion
             float scaleMultiplier = Mathf.Pow(1.5f, domainCount); 
             vfx.transform.localScale = new Vector3(scaleMultiplier, scaleMultiplier, 1f);
         }
+
         Collider2D[] enemiesHit = Physics2D.OverlapCircleAll(transform.position, whipRange);
         foreach (Collider2D col in enemiesHit)
         {
@@ -262,8 +253,7 @@ public class PlayerController : MonoBehaviour
         Vector2 direction = mousePos - transform.position;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         
-        // --- FIX IS HERE ---
-        // Changed from "- 90" to "+ 90" to flip it 180 degrees.
+        // Flipped 180 degrees (+90)
         transform.rotation = Quaternion.Euler(0, 0, angle + 90); 
     }
 
@@ -327,28 +317,24 @@ public class PlayerController : MonoBehaviour
         List<UpgradeOption> validUpgrades = new List<UpgradeOption>();
         foreach(var upgrade in allUpgrades)
         {
-            // --- STRICT LIMITS ---
+            // Strict Limits
             if (upgrade.type == UpgradeType.Hydra && hydraCount >= maxHydraCount) continue;
             if (upgrade.type == UpgradeType.Domain && domainCount >= maxDomainCount) continue;
-            
-            // --- NEW: TITAN LIMIT ---
             if (upgrade.type == UpgradeType.Titan && titanCount >= maxTitanCount) continue;
-            // ------------------------
-
             if (upgrade.type == UpgradeType.MultiShot && isMultiShot) continue; 
             if (upgrade.type == UpgradeType.Fungal && isFungal) continue;
             
             validUpgrades.Add(upgrade);
         }
 
+        // Shuffle and Pick 3
         List<UpgradeOption> shuffled = validUpgrades.OrderBy(x => System.Guid.NewGuid()).ToList();
         int optionsToTake = Mathf.Min(3, shuffled.Count);
         currentRoundOptions = shuffled.Take(optionsToTake).ToList();
 
-        List<string> uiTexts = new List<string>();
-        foreach(var opt in currentRoundOptions) uiTexts.Add($"{opt.title}\n{opt.description}");
-
-        if(uiManager) uiManager.ShowLevelUpOptions(uiTexts, OnUpgradeSelected);
+        // --- NEW: CALL THE CARD SYSTEM INSTEAD OF TEXT ---
+        if(uiManager) uiManager.ShowUpgradeCards(currentRoundOptions, OnUpgradeSelected);
+        // -------------------------------------------------
     }
 
     void OnUpgradeSelected(int choiceIndex)
@@ -362,9 +348,7 @@ public class PlayerController : MonoBehaviour
     {
         growthLevel++;
 
-        // --- NEW: TRIGGER GROW ANIMATION ---
         if(animator != null) animator.SetTrigger("Grow");
-        // -----------------------------------
 
         currentHealth = maxHealth; 
         AudioManager.instance.PlayGrowth();
@@ -377,12 +361,11 @@ public class PlayerController : MonoBehaviour
                 break;
             case UpgradeType.Vampiric:
                 isVampiric = true;
-                // THIS LINE ADDS THE STACKING EFFECT
-                healOnKillAmount += 2f; // Adds +2 HP per Upgrade
+                healOnKillAmount += 2f; // Stackable
                 absorptionRadius *= 1.2f; 
                 break;
             case UpgradeType.Titan:
-                titanCount++; // Count usage
+                titanCount++; 
                 transform.localScale *= 1.5f; 
                 maxHealth *= 2.0f; 
                 currentHealth = maxHealth;
@@ -427,21 +410,24 @@ public class PlayerController : MonoBehaviour
             Transform headT = activeHydraHeads[i].transform;
             float angle = i * angleStep;
             
-            // 1. POSITION
+            // 1. POSITION (Sticks to Body)
+            // Scales gap automatically with Titan size
             float x = Mathf.Cos(angle * Mathf.Deg2Rad) * hydraBaseDistance;
             float y = Mathf.Sin(angle * Mathf.Deg2Rad) * hydraBaseDistance;
+            
             headT.localPosition = new Vector3(x, y, 0);
 
-            // 2. ROTATION (This makes them face away)
-            // We use the new 'hydraRotationOffset' variable here
+            // 2. ROTATION (Adjustable)
             headT.localRotation = Quaternion.Euler(0, 0, angle + hydraRotationOffset);
 
-            // 3. SCALE
+            // 3. SCALE (Consistent Size)
             float currentScale = transform.localScale.x;
             float finalSize = (1f / currentScale) * hydraHeadScale; 
+            
             headT.localScale = new Vector3(finalSize, finalSize, 1f);
         }
     }
+
     void UpdateWhipUI()
     {
         if (whipIcons == null) return;
@@ -450,20 +436,13 @@ public class PlayerController : MonoBehaviour
         {
             if (whipIcons[i] == null) continue;
 
-            // If current charges are greater than this index, it's Active
-            if (i < currentWhipCharges)
-            {
-                whipIcons[i].color = iconActiveColor;
-            }
-            else
-            {
-                whipIcons[i].color = iconEmptyColor;
-            }
+            if (i < currentWhipCharges) whipIcons[i].color = iconActiveColor;
+            else whipIcons[i].color = iconEmptyColor;
         }
     }
 }
 
-// --- HYDRA CLASS (Keep at bottom) ---
+// --- HYDRA CLASS ---
 public class HydraTurret
 {
     public Transform transform;
