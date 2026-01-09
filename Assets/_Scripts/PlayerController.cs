@@ -125,6 +125,7 @@ public class PlayerController : MonoBehaviour
         mainCam = Camera.main;
         currentWhipCharges = maxWhipCharges;
         UpdateWhipUI(); 
+        if(uiManager) uiManager.UpdateLevelUI(growthLevel);
     }
 
     void Update()
@@ -351,8 +352,8 @@ public class PlayerController : MonoBehaviour
     void ApplyUpgrade(UpgradeType type)
     {
         growthLevel++;
+        if(uiManager) uiManager.UpdateLevelUI(growthLevel); 
 
-        if(animator != null) animator.SetTrigger("Grow");
 
         currentHealth = maxHealth; 
         AudioManager.instance.PlayGrowth();
