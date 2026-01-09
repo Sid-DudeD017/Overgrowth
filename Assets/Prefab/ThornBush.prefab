@@ -29,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.66811, y: 1.45999, z: 0}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -108,8 +108,8 @@ MonoBehaviour:
   explosionRadius: 3.5
   damage: 50
   chainReactionDelay: 0.2
-  explosionEffect: {fileID: 0}
-  explosionSound: {fileID: 0}
+  explosionEffect: {fileID: 2433282508537954060, guid: 3ef3ae421f71c5c4e97fe12dc2fc6312, type: 3}
+  explosionSound: {fileID: 8300000, guid: 6e37cd74e72f54b2985ccdd371a30810, type: 3}
 --- !u!61 &5535704744619874420
 BoxCollider2D:
   m_ObjectHideFlags: 0

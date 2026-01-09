@@ -25,28 +25,25 @@ public class ThornBush : MonoBehaviour
     }
 
     // 2. THE BOOM
+   // 2. THE BOOM
     public void Explode()
     {
-        if (hasExploded) return; // Prevent infinite loops
+        if (hasExploded) return; 
         hasExploded = true;
 
         // A. Deal Damage & Trigger Chains
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
         foreach (var hit in hits)
         {
-            // Damage Enemies
             if (hit.CompareTag("Enemy"))
             {
                 EnemyBase enemy = hit.GetComponent<EnemyBase>();
                 if (enemy != null) enemy.TakeDamage(damage);
             }
-            // CHAIN REACTION: Trigger other bushes!
             else if (hit.GetComponent<ThornBush>() != null)
             {
-                // Don't explode myself again
                 if (hit.gameObject != gameObject) 
                 {
-                    // Delay the next explosion slightly for a cool "Wave" effect
                     hit.GetComponent<ThornBush>().Invoke("Explode", chainReactionDelay);
                 }
             }
@@ -54,7 +51,15 @@ public class ThornBush : MonoBehaviour
 
         // B. Visuals & Sound
         if (explosionEffect) Instantiate(explosionEffect, transform.position, Quaternion.identity);
-        if (explosionSound) AudioSource.PlayClipAtPoint(explosionSound, transform.position);
+
+        // --- FIX IS HERE ---
+        if (explosionSound) 
+        {
+            // Play at Camera position (Full Volume) instead of Bush position (Quiet/Silent)
+            Vector3 soundPos = (Camera.main != null) ? Camera.main.transform.position : transform.position;
+            AudioSource.PlayClipAtPoint(explosionSound, soundPos, 1.0f);
+        }
+        // -------------------
 
         // C. Remove the bush
         Destroy(gameObject);
