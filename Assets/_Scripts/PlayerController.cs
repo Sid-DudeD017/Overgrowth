@@ -65,6 +65,11 @@ public class PlayerController : MonoBehaviour
     public float chompRange = 2.0f;       
     public float digestionTime = 3.0f;    
     public float healFromDigestion = 15f; 
+    // --- ADD THESE TO CONTROL THE GAP AND SIZE ---
+    public float hydraBaseDistance = 0.5f; // Smaller number = Closer to body
+    public float hydraHeadScale = 1.0f;    // Bigger number = Bigger heads
+    public float hydraRotationOffset = -90f;
+    // ---------------------------------------------
     private List<HydraTurret> activeHydraHeads = new List<HydraTurret>();
 
     [Header("Mutation: Vampiric")]
@@ -414,17 +419,27 @@ public class PlayerController : MonoBehaviour
     void ResizeAndRepositionHydras()
     {
         if (activeHydraHeads.Count == 0) return;
-        float distance = 1.2f; 
+
         float angleStep = 360f / activeHydraHeads.Count; 
+        
         for (int i = 0; i < activeHydraHeads.Count; i++)
         {
             Transform headT = activeHydraHeads[i].transform;
             float angle = i * angleStep;
-            float x = Mathf.Cos(angle * Mathf.Deg2Rad) * distance;
-            float y = Mathf.Sin(angle * Mathf.Deg2Rad) * distance;
+            
+            // 1. POSITION
+            float x = Mathf.Cos(angle * Mathf.Deg2Rad) * hydraBaseDistance;
+            float y = Mathf.Sin(angle * Mathf.Deg2Rad) * hydraBaseDistance;
             headT.localPosition = new Vector3(x, y, 0);
-            float inverseScale = 1f / transform.localScale.x; 
-            headT.localScale = new Vector3(inverseScale, inverseScale, 1f);
+
+            // 2. ROTATION (This makes them face away)
+            // We use the new 'hydraRotationOffset' variable here
+            headT.localRotation = Quaternion.Euler(0, 0, angle + hydraRotationOffset);
+
+            // 3. SCALE
+            float currentScale = transform.localScale.x;
+            float finalSize = (1f / currentScale) * hydraHeadScale; 
+            headT.localScale = new Vector3(finalSize, finalSize, 1f);
         }
     }
     void UpdateWhipUI()
