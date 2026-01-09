@@ -129,7 +129,7 @@ public class GameUIManager : MonoBehaviour
             
 
             if(winTitle) { winTitle.text = "CONTAINMENT FAILED"; winTitle.color = Color.red; }
-            if(winDescription) { winDescription.text = "Subject has escaped...\n\nTHE MONSTER WINS."; }
+            if(winDescription) { winDescription.text = "Subject01 has breached surface containment. Spores are entering the upper atmosphere. Global sterilization protocols have failed.\n HUMANITY IS LOST."; }
         }
 
 
