@@ -10,10 +10,10 @@ public class EnemyBase : MonoBehaviour
     
     protected Transform target; 
     [Header("Blood VFX & SFX")]
-    public GameObject bloodEffectPrefab; // Drag your Blood Particle Prefab here
-    public AudioClip hitSound;           // Drag a "Squish" or "Hit" sound here
+    public GameObject bloodEffectPrefab; 
+    public AudioClip hitSound;         
 
-    // --- FIXED: ADDED MISSING AUDIO CLIP VARIABLE ---
+    
     [Header("Audio")]
     public AudioClip deathSplatterSound; 
     // ------------------------------------------------

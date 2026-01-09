@@ -15,13 +15,17 @@ public class PlayerController : MonoBehaviour
         public string title;
         public string description;
         public UpgradeType type;
-        public Sprite cardSprite; // <--- NEW: Drag your Card Image here in Inspector!
+        public Sprite cardSprite; 
     }
 
     [Header("Stats")]
     public float maxHealth = 100f;
     public float currentHealth = 100f;
     public float healthCostPerShot = 2.0f; 
+    [Header("Tutorial")]
+    public GameObject tutorialText; 
+    public GameObject whipTutorialText; 
+    private int shootInstructionCount = 0;
     
     [Header("Nerfed: Root Regeneration")]
     public float regenRate = 3f;        
@@ -67,9 +71,9 @@ public class PlayerController : MonoBehaviour
     public float digestionTime = 3.0f;    
     public float healFromDigestion = 15f; 
     // --- HYDRA CONTROLS ---
-    public float hydraBaseDistance = 0.5f; // Smaller number = Closer to body
-    public float hydraHeadScale = 1.0f;    // Bigger number = Bigger heads
-    public float hydraRotationOffset = -90f; // Adjust to face heads outward
+    public float hydraBaseDistance = 0.5f; 
+    public float hydraHeadScale = 1.0f;    
+    public float hydraRotationOffset = -90f; 
     // ----------------------
     private List<HydraTurret> activeHydraHeads = new List<HydraTurret>();
 
@@ -108,8 +112,6 @@ public class PlayerController : MonoBehaviour
     public AudioSource playerAudio;
     public AudioClip shootSound;
     public AudioClip whipSound;
-    public AudioClip growthSound; 
-    public Animator animator; 
     public GameObject whipVFXPrefab; 
 
     private Camera mainCam;
@@ -160,11 +162,24 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.A) && Time.time >= nextFireTime)
         {
             Shoot(shootPoint, bulletDamage, bulletHoming);
+
+            if (tutorialText != null && tutorialText.activeSelf)
+            {
+                shootInstructionCount++;
+                if (shootInstructionCount >= 5)
+                {
+                    tutorialText.SetActive(false); // Hide it forever
+                }
+            }
         }
 
         // 4. WHIP
        if (Input.GetKeyDown(KeyCode.Space))
         {
+            if (whipTutorialText != null) 
+            {
+                whipTutorialText.SetActive(false);
+            }
             if (Time.time >= nextWhipTime)
             {
                 if (currentWhipCharges > 0)
@@ -184,8 +199,6 @@ public class PlayerController : MonoBehaviour
     public void Shoot(Transform origin, float dmg, float homing)
     {
         if (currentHealth <= healthCostPerShot + 1) return; 
-
-        if(animator != null) animator.SetTrigger("Shoot");
 
         TakeDamage(healthCostPerShot); 
         nextFireTime = Time.time + fireRate;
@@ -216,7 +229,6 @@ public class PlayerController : MonoBehaviour
     void VineWhip()
     {
         if(playerAudio && whipSound) playerAudio.PlayOneShot(whipSound);
-        if(animator != null) animator.SetTrigger("Whip");
 
         // Spawn VFX fixed (No rotation)
        if (whipVFXPrefab != null)
@@ -263,7 +275,6 @@ public class PlayerController : MonoBehaviour
         currentHealth += healFromDigestion;
         if (currentHealth > maxHealth) currentHealth = maxHealth;
         if(uiManager && uiManager.healthSlider) uiManager.healthSlider.value = currentHealth / maxHealth;
-        if(playerAudio && growthSound) playerAudio.PlayOneShot(growthSound);
     }
 
     public void AddBiomass(float amount)
@@ -416,20 +427,18 @@ public class PlayerController : MonoBehaviour
             Transform headT = activeHydraHeads[i].transform;
             float angle = i * angleStep;
             
-            // --- FIX 1: REVERT POSITION LOGIC ---
-            // We use 'hydraBaseDistance' directly as the Local Offset.
-            // As the Parent scales up, this Local Offset scales with it naturally.
+            
             float distance = hydraBaseDistance; 
             
             float x = Mathf.Cos(angle * Mathf.Deg2Rad) * distance;
             float y = Mathf.Sin(angle * Mathf.Deg2Rad) * distance;
             headT.localPosition = new Vector3(x, y, 0);
 
-            // --- FIX 2: ROTATION ---
+
             headT.localRotation = Quaternion.Euler(0, 0, angle + hydraRotationOffset);
 
-            // --- FIX 3: KEEP HEAD SIZE NORMAL ---
-            // This prevents the heads from becoming giant pixels when you grow
+
+
             float finalSize = (1f / currentScale) * hydraHeadScale; 
             headT.localScale = new Vector3(finalSize, finalSize, 1f);
         }

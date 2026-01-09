@@ -14,8 +14,6 @@ public class GameUIManager : MonoBehaviour
 
     [Header("Upgrade Menu")]
     public GameObject upgradePanel; 
-    public Button[] choiceButtons; 
-    public TextMeshProUGUI[] buttonTexts; 
 
     [Header("Visual Feedback")]
     public Color normalColor = Color.green;
@@ -26,22 +24,21 @@ public class GameUIManager : MonoBehaviour
     public GameObject winPanel;
     public TextMeshProUGUI winTitle;
     public TextMeshProUGUI winDescription;
-    public Image winBackgroundPanel;
     
     [Header("Card System")]
     public GameObject cardPrefab;      
     public Transform cardContainer;
     [Header("Audio")]
-    public AudioSource uiAudioSource; // Drag the AudioSource from your Game Manager here
-    public AudioClip winMusic;        // Drag your Win Music here
-    public AudioClip loseMusic;       // Drag your Defeat Music here
+    public AudioSource uiAudioSource; 
+    public AudioClip winMusic;        
+    public AudioClip loseMusic;      
 
     void Start()
     {
         if (upgradePanel) upgradePanel.SetActive(false);
         if (gameOverPanel) gameOverPanel.SetActive(false);
         
-        // Ensure game starts in a playing state
+        
         ResumeGame();
     }
 
@@ -55,23 +52,23 @@ public class GameUIManager : MonoBehaviour
         if (levelText != null) levelText.text = "Growth-" + level;
     }
 
-    // --- HELPER FUNCTIONS FOR PAUSING ---
+    
     void PauseGame()
     {
-        Time.timeScale = 0f;          // Freezes Game Logic, Physics, and Particles
-        AudioListener.pause = true;   // Pauses ALL Audio Sources globally
+        Time.timeScale = 0f;          
+        AudioListener.pause = true;   
     }
 
     void ResumeGame()
     {
-        Time.timeScale = 1f;          // Unfreezes Game Logic
-        AudioListener.pause = false;  // Unpauses Audio
+        Time.timeScale = 1f;          
+        AudioListener.pause = false;  
     }
     // ------------------------------------
 
     public void ShowUpgradeCards(List<PlayerController.UpgradeOption> options, System.Action<int> onCardSelected)
     {
-        // 1. FREEZE EVERYTHING
+       
         PauseGame();
 
         foreach (Transform child in cardContainer) Destroy(child.gameObject);
@@ -96,7 +93,7 @@ public class GameUIManager : MonoBehaviour
             {
                 btn.onClick.AddListener(() => 
                 {
-                    // 2. UNFREEZE WHEN CLICKED
+                    
                     ResumeGame();
                     
                     onCardSelected(index);
@@ -111,17 +108,17 @@ public class GameUIManager : MonoBehaviour
     {
         if (gameOverPanel) gameOverPanel.SetActive(true);
         
-        // 1. Play the Music
+        
         if (uiAudioSource && loseMusic)
         {
-            uiAudioSource.ignoreListenerPause = true; // IMPORTANT: Allows this to play while game is paused
-            uiAudioSource.Stop(); // Stop any previous music
+            uiAudioSource.ignoreListenerPause = true; 
+            uiAudioSource.Stop(); 
             uiAudioSource.clip = loseMusic;
-            uiAudioSource.loop = false; // Set true if you want it to loop
+            uiAudioSource.loop = false; 
             uiAudioSource.Play();
         }
 
-        PauseGame(); // Freezes everything else
+        PauseGame(); 
     }
 
     public void ShowWinScreen()
@@ -130,37 +127,33 @@ public class GameUIManager : MonoBehaviour
         {
             winPanel.SetActive(true);
             
-            // ... (Keep your existing text/color logic here) ...
+
             if(winTitle) { winTitle.text = "CONTAINMENT FAILED"; winTitle.color = Color.red; }
             if(winDescription) { winDescription.text = "Subject has escaped...\n\nTHE MONSTER WINS."; }
-            if(winBackgroundPanel) { winBackgroundPanel.color = new Color(0.3f, 0f, 0f, 1f); }
         }
 
-        // 1. Play the Music
+
         if (uiAudioSource && winMusic)
         {
-            uiAudioSource.ignoreListenerPause = true; // IMPORTANT: Allows this to play while game is paused
+            uiAudioSource.ignoreListenerPause = true; 
             uiAudioSource.Stop();
             uiAudioSource.clip = winMusic;
             uiAudioSource.loop = false; 
             uiAudioSource.Play();
         }
 
-        PauseGame(); // Freezes everything else
+        PauseGame(); 
     } 
     public void RestartGame()
     {
-        ResumeGame(); // IMPORTANT: Unfreeze before reloading or the next scene starts frozen!
+        ResumeGame(); 
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
     public void QuitToMainMenu()
     {
-        // 1. CRITICAL: Unpause audio and time before leaving
+        
         Time.timeScale = 1f;
         AudioListener.pause = false; 
-
-        // 2. Load your menu scene
-        // Make sure "MainMenu" matches the exact name of your scene file!
         SceneManager.LoadScene("MainMenu"); 
     }
 }
